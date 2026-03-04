@@ -3,8 +3,22 @@ import 'qr_scan_screen.dart';
 import 'home_screen.dart';
 import 'search_screen.dart';
 
-class AddAssetScreen extends StatelessWidget {
+class AddAssetScreen extends StatefulWidget {
   const AddAssetScreen({super.key});
+
+  @override
+  State<AddAssetScreen> createState() => _AddAssetScreenState();
+}
+
+class _AddAssetScreenState extends State<AddAssetScreen> {
+  final TextEditingController assetCodeController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController typeController = TextEditingController();
+  final TextEditingController brandController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+  final TextEditingController detailController = TextEditingController();
+
+  String status = "ปกติ";
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +26,7 @@ class AddAssetScreen extends StatelessWidget {
       backgroundColor: const Color(0xffEDEDED),
 
       appBar: AppBar(
-        automaticallyImplyLeading: false, // ❌ เอาลูกศรออก
+        automaticallyImplyLeading: false,
         backgroundColor: const Color(0xff4F6F52),
         foregroundColor: Colors.white,
         title: const Text("เพิ่มข้อมูลครุภัณฑ์"),
@@ -22,12 +36,14 @@ class AddAssetScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            buildTextField("รหัสครุภัณฑ์"),
-            buildTextField("ชื่อครุภัณฑ์"),
-            buildTextField("ประเภทครุภัณฑ์"),
-            buildTextField("ยี่ห้อ"),
-            buildTextField("ที่ตั้งครุภัณฑ์"),
-            buildTextField("รายละเอียด", maxLine: 3),
+            /// 🔹 รหัสครุภัณฑ์ (มีปุ่ม QR)
+            buildAssetCodeField(),
+
+            buildTextField("ชื่อครุภัณฑ์", nameController),
+            buildTextField("ประเภทครุภัณฑ์", typeController),
+            buildTextField("ยี่ห้อ", brandController),
+            buildTextField("ที่ตั้งครุภัณฑ์", locationController),
+            buildTextField("รายละเอียด", detailController, maxLine: 3),
 
             const SizedBox(height: 10),
 
@@ -37,13 +53,39 @@ class AddAssetScreen extends StatelessWidget {
             ),
 
             Row(
-              children: const [
-                Radio(value: 1, groupValue: 1, onChanged: null),
-                Text("ปกติ"),
-                Radio(value: 2, groupValue: 1, onChanged: null),
-                Text("แจ้งซ่อม"),
-                Radio(value: 3, groupValue: 1, onChanged: null),
-                Text("จำหน่ายออก"),
+              children: [
+                Radio(
+                  value: "ปกติ",
+                  groupValue: status,
+                  onChanged: (value) {
+                    setState(() {
+                      status = value.toString();
+                    });
+                  },
+                ),
+                const Text("ปกติ"),
+
+                Radio(
+                  value: "แจ้งซ่อม",
+                  groupValue: status,
+                  onChanged: (value) {
+                    setState(() {
+                      status = value.toString();
+                    });
+                  },
+                ),
+                const Text("แจ้งซ่อม"),
+
+                Radio(
+                  value: "จำหน่ายออก",
+                  groupValue: status,
+                  onChanged: (value) {
+                    setState(() {
+                      status = value.toString();
+                    });
+                  },
+                ),
+                const Text("จำหน่ายออก"),
               ],
             ),
 
@@ -67,11 +109,11 @@ class AddAssetScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    // ใส่ image picker ทีหลังได้
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(
-                      0xff4F6F52,
-                    ), // ปุ่มสีเขียวเหมือนเดิม
+                    backgroundColor: const Color(0xff4F6F52),
                     foregroundColor: Colors.white,
                   ),
                   child: const Text("browse"),
@@ -84,10 +126,22 @@ class AddAssetScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  print("Asset Code: ${assetCodeController.text}");
+                  print("Name: ${nameController.text}");
+                  print("Type: ${typeController.text}");
+                  print("Brand: ${brandController.text}");
+                  print("Location: ${locationController.text}");
+                  print("Detail: ${detailController.text}");
+                  print("Status: $status");
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("บันทึกข้อมูลสำเร็จ")),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xff4F6F52),
-                  foregroundColor: Colors.white, // 👈 ตัวอักษรสีขาว
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.all(15),
                 ),
                 child: const Text("บันทึก"),
@@ -97,7 +151,7 @@ class AddAssetScreen extends StatelessWidget {
         ),
       ),
 
-      /// 🔻 BOTTOM MENU เหมือน Home
+      /// 🔻 BOTTOM MENU
       bottomNavigationBar: Container(
         height: 70,
         color: const Color(0xff4F6F52),
@@ -119,8 +173,6 @@ class AddAssetScreen extends StatelessWidget {
               },
               child: const Icon(Icons.search, color: Colors.white),
             ),
-
-            /// 🔹 QR SCAN BUTTON
             GestureDetector(
               onTap: () async {
                 final result = await Navigator.push(
@@ -129,16 +181,13 @@ class AddAssetScreen extends StatelessWidget {
                 );
 
                 if (result != null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text("QR Code: $result")));
-
-                  print("QR = $result");
+                  setState(() {
+                    assetCodeController.text = result;
+                  });
                 }
               },
               child: const Icon(Icons.qr_code_scanner, color: Colors.white),
             ),
-
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -154,10 +203,48 @@ class AddAssetScreen extends StatelessWidget {
     );
   }
 
-  Widget buildTextField(String hint, {int maxLine = 1}) {
+  /// 🔹 ช่องรหัสครุภัณฑ์ พร้อมปุ่ม QR
+  Widget buildAssetCodeField() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
+        controller: assetCodeController,
+        decoration: InputDecoration(
+          hintText: "รหัสครุภัณฑ์",
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          enabledBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Colors.green),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const QRScanScreen()),
+              );
+
+              if (result != null) {
+                setState(() {
+                  assetCodeController.text = result;
+                });
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTextField(
+    String hint,
+    TextEditingController controller, {
+    int maxLine = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextField(
+        controller: controller,
         maxLines: maxLine,
         decoration: InputDecoration(
           hintText: hint,
