@@ -1,9 +1,50 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'home_screen.dart';
 import 'register_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  Future<void> login() async {
+    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("กรุณากรอกข้อมูลให้ครบ")));
+      return;
+    }
+
+    var response = await http.post(
+      Uri.parse("http://10.0.2.2:5000/login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "username": usernameController.text,
+        "password": passwordController.text,
+      }),
+    );
+
+    var data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data["status"] == "success") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Username หรือ Password ไม่ถูกต้อง")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +85,7 @@ class LoginScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(15),
               ),
+
               child: Column(
                 children: [
                   const Text(
@@ -53,7 +95,9 @@ class LoginScreen extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
+                  /// USERNAME
                   TextField(
+                    controller: usernameController,
                     decoration: InputDecoration(
                       labelText: "ชื่อผู้ใช้",
                       border: OutlineInputBorder(
@@ -64,7 +108,9 @@ class LoginScreen extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
+                  /// PASSWORD
                   TextField(
+                    controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: "รหัสผ่าน",
@@ -73,6 +119,7 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 10),
 
                   Row(
@@ -114,14 +161,7 @@ class LoginScreen extends StatelessWidget {
                         ),
                       ),
 
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomeScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: login,
 
                       child: const Text(
                         "เข้าสู่ระบบ",

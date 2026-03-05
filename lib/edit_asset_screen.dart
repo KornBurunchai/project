@@ -1,9 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import 'qr_scan_screen.dart';
 import 'search_screen.dart';
 
 class EditAssetScreen extends StatefulWidget {
-  const EditAssetScreen({super.key});
+  final Map asset;
+
+  const EditAssetScreen({super.key, required this.asset});
 
   @override
   State<EditAssetScreen> createState() => _EditAssetScreenState();
@@ -20,6 +25,46 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
   String status = "ปกติ";
 
   @override
+  void initState() {
+    super.initState();
+
+    /// โหลดข้อมูลเดิม
+    assetCodeController.text = widget.asset["asset_code"] ?? "";
+    nameController.text = widget.asset["asset_name"] ?? "";
+    typeController.text = widget.asset["type_name"] ?? "";
+    brandController.text = widget.asset["brand"] ?? "";
+    locationController.text = widget.asset["location"] ?? "";
+    detailController.text = widget.asset["description"] ?? "";
+    status = widget.asset["status"] ?? "ปกติ";
+  }
+
+  /// UPDATE API
+  Future updateAsset() async {
+    final res = await http.put(
+      Uri.parse(
+          "http://10.0.2.2:5000/assets/${widget.asset["asset_id"]}"),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({
+        "asset_code": assetCodeController.text,
+        "asset_name": nameController.text,
+        "type_name": typeController.text,
+        "brand": brandController.text,
+        "location": locationController.text,
+        "description": detailController.text,
+        "status": status
+      }),
+    );
+
+    if (res.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("แก้ไขข้อมูลสำเร็จ")),
+      );
+
+      Navigator.pop(context, true);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffEDEDED),
@@ -27,12 +72,6 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xff4F6F52),
         foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
         title: const Text("แก้ไขข้อมูลครุภัณฑ์"),
       ),
 
@@ -40,7 +79,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            /// 🔹 รหัสครุภัณฑ์ (มีปุ่ม QR)
+
             buildAssetCodeField(),
 
             buildTextField("ชื่อครุภัณฑ์", nameController),
@@ -93,56 +132,12 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
               ],
             ),
 
-            const SizedBox(height: 10),
-
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text("รูปครุภัณฑ์"),
-            ),
-
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 45,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.green),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    // ใส่ image picker ภายหลังได้
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff4F6F52),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text("browse"),
-                ),
-              ],
-            ),
-
             const SizedBox(height: 20),
 
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  print("Asset Code: ${assetCodeController.text}");
-                  print("Name: ${nameController.text}");
-                  print("Type: ${typeController.text}");
-                  print("Brand: ${brandController.text}");
-                  print("Location: ${locationController.text}");
-                  print("Detail: ${detailController.text}");
-                  print("Status: $status");
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("แก้ไขข้อมูลสำเร็จ")),
-                  );
-                },
+                onPressed: updateAsset,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xff4F6F52),
                   foregroundColor: Colors.white,
@@ -155,19 +150,20 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
         ),
       ),
 
-      /// 🔻 BOTTOM MENU
       bottomNavigationBar: Container(
         height: 70,
         color: const Color(0xff4F6F52),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
+
             GestureDetector(
               onTap: () {
                 Navigator.pop(context);
               },
               child: const Icon(Icons.home, color: Colors.white),
             ),
+
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -177,6 +173,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
               },
               child: const Icon(Icons.search, color: Colors.white),
             ),
+
             GestureDetector(
               onTap: () async {
                 final result = await Navigator.push(
@@ -192,22 +189,15 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
               },
               child: const Icon(Icons.qr_code_scanner, color: Colors.white),
             ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const EditAssetScreen()),
-                );
-              },
-              child: const Icon(Icons.add, color: Colors.white),
-            ),
+
+            const Icon(Icons.edit, color: Colors.white),
           ],
         ),
       ),
     );
   }
 
-  /// 🔹 ช่องรหัส พร้อมปุ่ม QR
+  /// รหัสครุภัณฑ์
   Widget buildAssetCodeField() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -216,25 +206,6 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
         decoration: InputDecoration(
           hintText: "รหัสครุภัณฑ์",
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.green),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const QRScanScreen()),
-              );
-
-              if (result != null) {
-                setState(() {
-                  assetCodeController.text = result;
-                });
-              }
-            },
-          ),
         ),
       ),
     );
@@ -253,10 +224,6 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
         decoration: InputDecoration(
           hintText: hint,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.green),
-            borderRadius: BorderRadius.circular(10),
-          ),
         ),
       ),
     );

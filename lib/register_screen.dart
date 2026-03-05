@@ -1,9 +1,60 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'login_screen.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+
+  final firstName = TextEditingController();
+  final lastName = TextEditingController();
+  final email = TextEditingController();
+  final username = TextEditingController();
+  final password = TextEditingController();
+
+  Future registerUser() async {
+
+    var url = Uri.parse("http://10.0.2.2:5000/register");
+
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "first_name": firstName.text,
+        "last_name": lastName.text,
+        "email": email.text,
+        "username": username.text,
+        "password": password.text
+      }),
+    );
+
+    var data = jsonDecode(response.body);
+
+    if (data["message"] == "success") {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("สมัครสมาชิกสำเร็จ")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+
+    } else {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("สมัครไม่สำเร็จ")),
+      );
+
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +66,6 @@ class RegisterScreen extends StatelessWidget {
           child: Column(
             children: [
 
-              /// HEADER
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -33,7 +83,6 @@ class RegisterScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              /// IMAGE
               Image.asset(
                 'assets/images/login.png',
                 height: 150,
@@ -41,7 +90,6 @@ class RegisterScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              /// REGISTER BOX
               Container(
                 margin: const EdgeInsets.all(20),
                 padding: const EdgeInsets.all(20),
@@ -65,15 +113,14 @@ class RegisterScreen extends StatelessWidget {
 
                     const SizedBox(height: 15),
 
-                    buildInput("ชื่อ"),
-                    buildInput("นามสกุล"),
-                    buildInput("อีเมล"),
-                    buildInput("ชื่อผู้ใช้"),
-                    buildInput("รหัสผ่าน", isPassword: true),
+                    buildInput("ชื่อ", firstName),
+                    buildInput("นามสกุล", lastName),
+                    buildInput("อีเมล", email),
+                    buildInput("ชื่อผู้ใช้", username),
+                    buildInput("รหัสผ่าน", password, isPassword: true),
 
                     const SizedBox(height: 10),
 
-                    /// BACK TO LOGIN
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(
@@ -91,7 +138,6 @@ class RegisterScreen extends StatelessWidget {
 
                     const SizedBox(height: 15),
 
-                    /// REGISTER BUTTON
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -102,14 +148,7 @@ class RegisterScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HomeScreen(),
-                            ),
-                          );
-                        },
+                        onPressed: registerUser,
                         child: const Text(
                           "ลงทะเบียน",
                           style: TextStyle(color: Colors.white),
@@ -126,10 +165,12 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  Widget buildInput(String label, {bool isPassword = false}) {
+  Widget buildInput(String label, TextEditingController controller,
+      {bool isPassword = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
+        controller: controller,
         obscureText: isPassword,
         decoration: InputDecoration(
           labelText: label,

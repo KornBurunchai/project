@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import 'qr_scan_screen.dart';
 import 'add_asset_screen.dart';
 import 'asset_detail_screen.dart';
 import 'search_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
 /// ================= STATUS CARD =================
 class StatusCard extends StatelessWidget {
@@ -20,24 +30,25 @@ class StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: 110,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 2),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             number,
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
           const SizedBox(height: 5),
-          Text(label, style: TextStyle(color: color)),
+          Text(label),
         ],
       ),
     );
@@ -46,12 +57,14 @@ class StatusCard extends StatelessWidget {
 
 /// ================= ASSET ITEM =================
 class AssetItem extends StatelessWidget {
+  final String assetCode;
   final String name;
   final String status;
   final Color statusColor;
 
   const AssetItem({
     super.key,
+    required this.assetCode,
     required this.name,
     required this.status,
     required this.statusColor,
@@ -64,7 +77,9 @@ class AssetItem extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const AssetDetailScreen()),
+          MaterialPageRoute(
+            builder: (_) => AssetDetailScreen(assetCode: assetCode),
+          ),
         );
       },
       child: Container(
@@ -106,9 +121,54 @@ class AssetItem extends StatelessWidget {
   }
 }
 
-/// ================= HOME SCREEN =================
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class _HomeScreenState extends State<HomeScreen> {
+  List assets = [];
+
+  int total = 0;
+  int normal = 0;
+  int repair = 0;
+  int disposed = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAssets();
+    fetchDashboard();
+  }
+
+  /// ================= GET ASSETS =================
+  Future<void> fetchAssets() async {
+    final res = await http.get(Uri.parse("http://10.0.2.2:5000/assets"));
+
+    if (res.statusCode == 200) {
+      setState(() {
+        assets = json.decode(res.body);
+      });
+    }
+  }
+
+  /// ================= GET DASHBOARD =================
+  Future<void> fetchDashboard() async {
+    final res = await http.get(Uri.parse("http://10.0.2.2:5000/dashboard"));
+
+    if (res.statusCode == 200) {
+      final data = json.decode(res.body);
+
+      setState(() {
+        total = data["total"];
+        normal = data["normal"];
+        repair = data["repair"];
+        disposed = data["disposed"];
+      });
+    }
+  }
+
+  Color getStatusColor(String status) {
+    if (status == "ปกติ") return Colors.green;
+    if (status == "แจ้งซ่อม") return Colors.orange;
+    if (status == "จำหน่ายออก") return Colors.red;
+    return Colors.grey;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,30 +197,31 @@ class HomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
+                  /// DASHBOARD
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                     physics: const NeverScrollableScrollPhysics(),
-                    children: const [
+                    children: [
                       StatusCard(
-                        number: "20",
+                        number: total.toString(),
                         label: "ทั้งหมด",
                         color: Colors.blue,
                       ),
                       StatusCard(
-                        number: "15",
+                        number: normal.toString(),
                         label: "ปกติ",
                         color: Colors.green,
                       ),
                       StatusCard(
-                        number: "3",
+                        number: repair.toString(),
                         label: "แจ้งซ่อม",
                         color: Colors.orange,
                       ),
                       StatusCard(
-                        number: "2",
+                        number: disposed.toString(),
                         label: "จำหน่ายออก",
                         color: Colors.red,
                       ),
@@ -169,6 +230,7 @@ class HomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
+                  /// SEARCH
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
@@ -187,23 +249,24 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            /// LIST
+            /// LIST ASSETS
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                children: const [
-                  AssetItem(
-                    name: "โน๊ตบุ๊ค - A401",
-                    status: "แจ้งซ่อม",
-                    statusColor: Colors.orange,
-                  ),
-                  SizedBox(height: 12),
-                  AssetItem(
-                    name: "เครื่องคอมพิวเตอร์ - B402",
-                    status: "ปกติ",
-                    statusColor: Colors.green,
-                  ),
-                ],
+                itemCount: assets.length,
+                itemBuilder: (context, index) {
+                  final item = assets[index];
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: AssetItem(
+                      assetCode: item["asset_code"],
+                      name: "${item["asset_name"]} - ${item["location"]}",
+                      status: item["status"],
+                      statusColor: getStatusColor(item["status"]),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -217,17 +280,7 @@ class HomeScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            /// HOME
-            GestureDetector(
-              onTap: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  (route) => false,
-                );
-              },
-              child: const Icon(Icons.home, color: Colors.white),
-            ),
+            const Icon(Icons.home, color: Colors.white),
 
             GestureDetector(
               onTap: () {
@@ -239,24 +292,16 @@ class HomeScreen extends StatelessWidget {
               child: const Icon(Icons.search, color: Colors.white),
             ),
 
-            /// QR SCAN
             GestureDetector(
               onTap: () async {
-                final result = await Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const QRScanScreen()),
                 );
-
-                if (result != null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text("QR Code: $result")));
-                }
               },
               child: const Icon(Icons.qr_code_scanner, color: Colors.white),
             ),
 
-            /// ADD
             GestureDetector(
               onTap: () {
                 Navigator.push(
