@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 
-import 'qr_scan_screen.dart';
+import 'qr_scan_screen_add.dart';
 import 'search_screen.dart';
 import 'home_screen.dart';
 
@@ -78,7 +78,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       var data = jsonDecode(res.body);
 
       return data["filename"];
-
     }
 
     return null;
@@ -96,7 +95,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
         "asset_code": assetCodeController.text,
         "asset_name": nameController.text,
-        "type_id": 1, // ใส่ id จริงจาก DB ได้
+        "type_id": 1,
         "brand": brandController.text,
         "location": locationController.text,
         "description": detailController.text,
@@ -109,19 +108,19 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     if(response.statusCode == 200){
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("เพิ่มครุภัณฑ์สำเร็จ"))
+          const SnackBar(content: Text("เพิ่มครุภัณฑ์สำเร็จ"))
       );
 
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
+            (route) => false,
       );
 
     }else{
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("เพิ่มข้อมูลไม่สำเร็จ"))
+          const SnackBar(content: Text("เพิ่มข้อมูลไม่สำเร็จ"))
       );
 
     }
@@ -151,7 +150,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             buildTextField("ชื่อครุภัณฑ์", nameController),
 
-            /// TYPE DROPDOWN
+            /// TYPE
             DropdownButtonFormField(
               value: type,
               items: typeList.map((item) {
@@ -179,7 +178,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             const SizedBox(height: 10),
 
-            /// STATUS DROPDOWN
+            /// STATUS
             DropdownButtonFormField(
               value: status,
               items: statusList.map((item){
@@ -201,7 +200,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             const SizedBox(height: 15),
 
-            /// IMAGE PREVIEW
+            /// IMAGE
             const Align(
               alignment: Alignment.centerLeft,
               child: Text("รูปครุภัณฑ์"),
@@ -242,7 +241,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             const SizedBox(height: 20),
 
-            /// SAVE BUTTON
+            /// SAVE
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -292,12 +291,15 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
               child: const Icon(Icons.search,color: Colors.white),
             ),
 
+            /// QR SCAN
             GestureDetector(
               onTap: () async {
 
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_)=>const QRScanScreen()),
+                  MaterialPageRoute(
+                    builder: (_)=>const QRScanScreenAdd(),
+                  ),
                 );
 
                 if(result != null){
@@ -318,7 +320,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     );
   }
 
-  /// ASSET CODE FIELD
+  /// ================= ASSET CODE =================
   Widget buildAssetCodeField(){
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -335,7 +337,9 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
               final result = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_)=>const QRScanScreen()),
+                MaterialPageRoute(
+                  builder: (_)=>const QRScanScreenAdd(),
+                ),
               );
 
               if(result != null){
@@ -351,6 +355,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     );
   }
 
+  /// ================= TEXTFIELD =================
   Widget buildTextField(
       String hint,
       TextEditingController controller,

@@ -55,19 +55,30 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
     );
   }
 
-  Widget _field(String label, String value) {
+  Widget buildField(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: TextField(
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: value,
-          filled: true,
-          fillColor: const Color(0xffEEEEEE),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+
+        decoration: BoxDecoration(
+          color: const Color(0xffEEEEEE),
+          borderRadius: BorderRadius.circular(8),
+        ),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+
+            const SizedBox(height: 4),
+
+            Text(value, style: const TextStyle(fontSize: 16)),
+          ],
         ),
       ),
     );
@@ -76,9 +87,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -93,11 +102,10 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
       bottomNavigationBar: Container(
         height: 70,
         color: const Color(0xff4F6F52),
+
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-
-            /// HOME
             IconButton(
               icon: const Icon(Icons.home, color: Colors.white),
               onPressed: () {
@@ -109,7 +117,6 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
               },
             ),
 
-            /// SEARCH
             IconButton(
               icon: const Icon(Icons.search, color: Colors.white),
               onPressed: () {
@@ -120,38 +127,31 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
               },
             ),
 
-            /// SCAN QR
             IconButton(
               icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const QRScanScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const QRScanScreen()),
                 );
 
                 if (result != null) {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          AssetDetailScreen(assetCode: result),
+                      builder: (_) => AssetDetailScreen(assetCode: result),
                     ),
                   );
                 }
               },
             ),
 
-            /// ADD
             IconButton(
               icon: const Icon(Icons.add, color: Colors.white),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const AddAssetScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const AddAssetScreen()),
                 );
               },
             ),
@@ -161,157 +161,128 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
+
         child: Column(
           children: [
-
             /// IMAGE
-            Card(
-              shape: RoundedRectangleBorder(
+            Container(
+              width: double.infinity,
+              height: 180,
+
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
               ),
 
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-
-                    asset["image"] != null && asset["image"] != ""
-                        ? Image.network(
-                            "http://10.0.2.2:5000/uploads/${asset["image"]}",
-                            height: 150,
-                          )
-                        : const Icon(Icons.image, size: 120),
-
-                    const SizedBox(height: 10),
-
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
+              child: asset["image"] != null && asset["image"] != ""
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        "http://10.0.2.2:5000/uploads/${asset["image"]}",
+                        fit: BoxFit.cover,
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditAssetScreen(asset: asset),
-                          ),
-                        );
-                      },
-                      child: const Text("แก้ไข"),
-                    ),
-                  ],
-                ),
-              ),
+                    )
+                  : const Center(child: Icon(Icons.image, size: 100)),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            /// QR
-            Card(
-              shape: RoundedRectangleBorder(
+            /// QR CODE
+            Container(
+              width: double.infinity,
+
+              padding: const EdgeInsets.all(16),
+
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
               ),
 
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
+              child: Column(
+                children: [
+                  const Text(
+                    "QR Code",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
 
-                    const Text(
-                      "QR Code",
-                      style: TextStyle(fontSize: 16),
-                    ),
+                  const SizedBox(height: 10),
 
-                    const SizedBox(height: 10),
-
-                    QrImageView(
-                      data: asset["asset_code"] ?? "",
-                      size: 150,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            /// DETAILS
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-
-                    _field("รหัสครุภัณฑ์", asset["asset_code"] ?? ""),
-                    _field("ชื่อครุภัณฑ์", asset["asset_name"] ?? ""),
-                    _field("ประเภท", asset["type_name"] ?? ""),
-                    _field("ยี่ห้อ", asset["brand"] ?? ""),
-                    _field("สถานที่", asset["location"] ?? ""),
-                    _field("รายละเอียด", asset["description"] ?? ""),
-                    _field("สถานะ", asset["status"] ?? ""),
-
-                  ],
-                ),
+                  QrImageView(
+                    data: asset["asset_code"] ?? "",
+                    size: MediaQuery.of(context).size.width * 0.45,
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 20),
 
-            /// BUTTONS
+            /// DETAILS
+            buildField("รหัสครุภัณฑ์", asset["asset_code"] ?? ""),
+            buildField("ชื่อครุภัณฑ์", asset["asset_name"] ?? ""),
+            buildField("ประเภท", asset["type_name"] ?? ""),
+            buildField("ยี่ห้อ", asset["brand"] ?? ""),
+            buildField("สถานที่", asset["location"] ?? ""),
+            buildField("รายละเอียด", asset["description"] ?? ""),
+            buildField("สถานะ", asset["status"] ?? ""),
+
+            const SizedBox(height: 20),
+
             Row(
               children: [
-
-                /// EDIT
                 Expanded(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.edit),
                     label: const Text("แก้ไข"),
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                     ),
-                    onPressed: () {
-                      Navigator.push(
+
+                    onPressed: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => EditAssetScreen(asset: asset),
                         ),
                       );
+
+                      if (result == true) {
+                        fetchAsset();
+                      }
                     },
                   ),
                 ),
 
                 const SizedBox(width: 10),
 
-                /// DELETE
                 Expanded(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.delete),
                     label: const Text("ลบ"),
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
-                    onPressed: () async {
 
+                    onPressed: () async {
                       bool confirm = await showDialog(
                         context: context,
+
                         builder: (_) => AlertDialog(
                           title: const Text("ยืนยัน"),
-                          content:
-                              const Text("ต้องการลบข้อมูลนี้ใช่หรือไม่ ?"),
+                          content: const Text("ต้องการลบข้อมูลนี้ใช่หรือไม่"),
+
                           actions: [
                             TextButton(
-                              onPressed: () =>
-                                  Navigator.pop(context, false),
+                              onPressed: () => Navigator.pop(context, false),
                               child: const Text("ยกเลิก"),
                             ),
+
                             TextButton(
-                              onPressed: () =>
-                                  Navigator.pop(context, true),
+                              onPressed: () => Navigator.pop(context, true),
                               child: const Text("ลบ"),
                             ),
                           ],

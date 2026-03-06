@@ -1,28 +1,197 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import 'home_screen.dart';
 import 'qr_scan_screen.dart';
 import 'add_asset_screen.dart';
+import 'asset_detail_screen.dart';
 
-class SearchScreen extends StatelessWidget {
+class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
   @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+
+  final TextEditingController searchController = TextEditingController();
+
+  List assets = [];
+  bool loading = false;
+
+  /// ================= STATUS COLOR =================
+  Color getStatusColor(String status) {
+
+    if (status == "ปกติ") {
+      return Colors.green;
+    }
+
+    if (status == "แจ้งซ่อม") {
+      return Colors.orange;
+    }
+
+    if (status == "จำหน่ายออก") {
+      return Colors.red;
+    }
+
+    return Colors.grey;
+  }
+
+  /// ================= SEARCH =================
+  Future searchAsset(String keyword) async {
+
+    if (keyword.isEmpty) {
+      setState(() {
+        assets = [];
+      });
+      return;
+    }
+
+    setState(() {
+      loading = true;
+    });
+
+    final res = await http.get(
+      Uri.parse("http://10.0.2.2:5000/assets?search=$keyword"),
+    );
+
+    if (res.statusCode == 200) {
+
+      final data = json.decode(res.body);
+
+      setState(() {
+        assets = data;
+        loading = false;
+      });
+
+    } else {
+
+      setState(() {
+        loading = false;
+      });
+
+    }
+  }
+
+  /// ================= ASSET CARD =================
+  Widget assetCard(Map asset) {
+
+    return GestureDetector(
+
+      onTap: (){
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                AssetDetailScreen(assetCode: asset["asset_code"]),
+          ),
+        );
+      },
+
+      child: Container(
+
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.all(12),
+
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0,2),
+            )
+          ],
+        ),
+
+        child: Row(
+          children: [
+
+            /// IMAGE FROM DATABASE
+            Container(
+              width: 50,
+              height: 50,
+
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(10),
+              ),
+
+              child: asset["image"] != null && asset["image"] != ""
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        "http://10.0.2.2:5000/uploads/${asset["image"]}",
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : const Icon(Icons.laptop,size:28),
+            ),
+
+            const SizedBox(width: 12),
+
+            /// TEXT
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  Text(
+                    asset["asset_name"] ?? "",
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    asset["status"] ?? "",
+                    style: TextStyle(
+                      color: getStatusColor(asset["status"]),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                ],
+              ),
+            ),
+
+            const Icon(Icons.arrow_forward_ios,size:16)
+
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+
     return Scaffold(
+
       backgroundColor: const Color(0xffEDEDED),
 
       body: SafeArea(
         child: Column(
           children: [
-            /// 🔹 HEADER
+
+            /// ================= HEADER =================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               color: const Color(0xff4F6F52),
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
+                children: [
+
+                  const Text(
                     "ระบบตรวจเช็คครุภัณฑ์",
                     style: TextStyle(
                       color: Colors.white,
@@ -31,103 +200,134 @@ class SearchScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
 
                   /// SEARCH BAR
                   TextField(
-                    decoration: InputDecoration(
-                      hintText: "ค้นหาครุภัณฑ์",
+
+                    controller: searchController,
+
+                    onChanged: (value){
+                      searchAsset(value);
+                    },
+
+                    decoration: const InputDecoration(
+                      hintText: "ค้นหาครุภัณฑ์ (ชื่อ / รหัส)",
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: EdgeInsets.symmetric(horizontal: 12),
+
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10)),
                         borderSide: BorderSide.none,
                       ),
                     ),
                   ),
+
                 ],
               ),
             ),
 
-            /// 🔹 EMPTY STATE
+            /// ================= RESULT =================
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.search, size: 80, color: Colors.grey),
 
-                  SizedBox(height: 10),
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
 
-                  Text(
-                    "ค้นหาครุภัณฑ์",
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
+                  : assets.isEmpty
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
 
-                  SizedBox(height: 5),
+                            Icon(Icons.search,size:80,color:Colors.grey),
 
-                  Text(
-                    "กรอกชื่อหรือรหัสเพื่อค้นหา",
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
+                            SizedBox(height:10),
+
+                            Text(
+                              "ค้นหาครุภัณฑ์",
+                              style: TextStyle(fontSize:16,color:Colors.grey),
+                            ),
+
+                            SizedBox(height:5),
+
+                            Text(
+                              "กรอกชื่อหรือรหัสเพื่อค้นหา",
+                              style: TextStyle(fontSize:14,color:Colors.grey),
+                            ),
+
+                          ],
+                        )
+
+                      : ListView.builder(
+
+                          padding: const EdgeInsets.all(16),
+
+                          itemCount: assets.length,
+
+                          itemBuilder: (context,index){
+
+                            final asset = assets[index];
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: assetCard(asset),
+                            );
+                          },
+
+                        ),
             ),
+
           ],
         ),
       ),
 
-      /// 🔻 BOTTOM NAV
+      /// ================= BOTTOM MENU =================
       bottomNavigationBar: Container(
+
         height: 70,
         color: const Color(0xff4F6F52),
+
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
+
             /// HOME
             GestureDetector(
-              onTap: () {
+              onTap: (){
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  (route) => false,
+                  MaterialPageRoute(builder: (_)=>const HomeScreen()),
+                  (route)=>false,
                 );
               },
-              child: const Icon(Icons.home, color: Colors.white),
+              child: const Icon(Icons.home,color:Colors.white),
             ),
 
-            /// SEARCH (อยู่หน้าเดิม)
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SearchScreen()),
-                );
-              },
-              child: const Icon(Icons.search, color: Colors.white),
-            ),
+            /// SEARCH
+            const Icon(Icons.search,color:Colors.white),
 
             /// QR
             GestureDetector(
-              onTap: () {
+              onTap: (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const QRScanScreen()),
+                  MaterialPageRoute(builder: (_)=>const QRScanScreen()),
                 );
               },
-              child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+              child: const Icon(Icons.qr_code_scanner,color:Colors.white),
             ),
 
             /// ADD
             GestureDetector(
-              onTap: () {
+              onTap: (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const AddAssetScreen()),
+                  MaterialPageRoute(builder: (_)=>const AddAssetScreen()),
                 );
               },
-              child: const Icon(Icons.add, color: Colors.white),
+              child: const Icon(Icons.add,color:Colors.white),
             ),
+
           ],
         ),
       ),
