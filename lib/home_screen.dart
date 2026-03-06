@@ -19,37 +19,43 @@ class StatusCard extends StatelessWidget {
   final String number;
   final String label;
   final Color color;
+  final VoidCallback onTap;
 
   const StatusCard({
     super.key,
     required this.number,
     required this.label,
     required this.color,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 110,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color, width: 2),
-      ),
-      child: Column(
-        children: [
-          Text(
-            number,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 120,
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color, width: 2),
+        ),
+        child: Column(
+          children: [
+            Text(
+              number,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(height: 5),
-          Text(label),
-        ],
+            const SizedBox(height: 5),
+            Text(label),
+          ],
+        ),
       ),
     );
   }
@@ -60,6 +66,7 @@ class AssetItem extends StatelessWidget {
   final String assetCode;
   final String name;
   final String status;
+  final String image;
   final Color statusColor;
 
   const AssetItem({
@@ -67,6 +74,7 @@ class AssetItem extends StatelessWidget {
     required this.assetCode,
     required this.name,
     required this.status,
+    required this.image,
     required this.statusColor,
   });
 
@@ -90,21 +98,34 @@ class AssetItem extends StatelessWidget {
         ),
         child: Row(
           children: [
+            /// IMAGE
             Container(
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(10),
+                color: Colors.grey[300],
               ),
-              child: const Icon(Icons.computer),
+              child: image != ""
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        "http://10.0.2.2:5000/uploads/$image",
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : const Icon(Icons.computer),
             ),
+
             const SizedBox(width: 12),
+
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name),
+                Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+
                 const SizedBox(height: 5),
+
                 Text(
                   status,
                   style: TextStyle(
@@ -129,11 +150,22 @@ class _HomeScreenState extends State<HomeScreen> {
   int repair = 0;
   int disposed = 0;
 
+  String selectedStatus = "";
+
   @override
   void initState() {
     super.initState();
     fetchAssets();
     fetchDashboard();
+  }
+
+  /// ================= FILTER =================
+  List get filteredAssets {
+    if (selectedStatus == "") return assets;
+
+    return assets.where((item) {
+      return item["status"] == selectedStatus;
+    }).toList();
   }
 
   /// ================= GET ASSETS =================
@@ -147,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// ================= GET DASHBOARD =================
+  /// ================= DASHBOARD =================
   Future<void> fetchDashboard() async {
     final res = await http.get(Uri.parse("http://10.0.2.2:5000/dashboard"));
 
@@ -163,10 +195,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// ================= COLOR =================
   Color getStatusColor(String status) {
     if (status == "ปกติ") return Colors.green;
     if (status == "แจ้งซ่อม") return Colors.orange;
     if (status == "จำหน่ายออก") return Colors.red;
+
     return Colors.grey;
   }
 
@@ -178,11 +212,12 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            /// HEADER
+            /// ================= HEADER =================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               color: const Color(0xff4F6F52),
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -190,58 +225,90 @@ class _HomeScreenState extends State<HomeScreen> {
                     "ระบบตรวจเช็คครุภัณฑ์",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  /// DASHBOARD
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      StatusCard(
-                        number: total.toString(),
-                        label: "ทั้งหมด",
-                        color: Colors.blue,
-                      ),
-                      StatusCard(
-                        number: normal.toString(),
-                        label: "ปกติ",
-                        color: Colors.green,
-                      ),
-                      StatusCard(
-                        number: repair.toString(),
-                        label: "แจ้งซ่อม",
-                        color: Colors.orange,
-                      ),
-                      StatusCard(
-                        number: disposed.toString(),
-                        label: "จำหน่ายออก",
-                        color: Colors.red,
-                      ),
-                    ],
+                  /// ================= DASHBOARD =================
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        StatusCard(
+                          number: total.toString(),
+                          label: "ทั้งหมด",
+                          color: Colors.blue,
+                          onTap: () {
+                            setState(() {
+                              selectedStatus = "";
+                            });
+                          },
+                        ),
+
+                        StatusCard(
+                          number: normal.toString(),
+                          label: "ปกติ",
+                          color: Colors.green,
+                          onTap: () {
+                            setState(() {
+                              selectedStatus = "ปกติ";
+                            });
+                          },
+                        ),
+
+                        StatusCard(
+                          number: repair.toString(),
+                          label: "แจ้งซ่อม",
+                          color: Colors.orange,
+                          onTap: () {
+                            setState(() {
+                              selectedStatus = "แจ้งซ่อม";
+                            });
+                          },
+                        ),
+
+                        StatusCard(
+                          number: disposed.toString(),
+                          label: "จำหน่ายออก",
+                          color: Colors.red,
+                          onTap: () {
+                            setState(() {
+                              selectedStatus = "จำหน่ายออก";
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 15),
 
-                  /// SEARCH
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const TextField(
-                      decoration: InputDecoration(
-                        hintText: "ค้นหาครุภัณฑ์",
-                        border: InputBorder.none,
-                        icon: Icon(Icons.search),
+                  /// ================= SEARCH =================
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SearchScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const TextField(
+                        enabled: false,
+                        decoration: InputDecoration(
+                          hintText: "ค้นหาครุภัณฑ์",
+                          border: InputBorder.none,
+                          icon: Icon(Icons.search),
+                        ),
                       ),
                     ),
                   ),
@@ -249,13 +316,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            /// LIST ASSETS
+            /// ================= LIST =================
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: assets.length,
+                itemCount: filteredAssets.length,
+
                 itemBuilder: (context, index) {
-                  final item = assets[index];
+                  final item = filteredAssets[index];
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
@@ -263,6 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       assetCode: item["asset_code"],
                       name: "${item["asset_name"]} - ${item["location"]}",
                       status: item["status"],
+                      image: item["image"] ?? "",
                       statusColor: getStatusColor(item["status"]),
                     ),
                   );
