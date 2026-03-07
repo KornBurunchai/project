@@ -11,45 +11,45 @@ class QRScanScreen extends StatefulWidget {
 }
 
 class _QRScanScreenState extends State<QRScanScreen> {
-
   bool scanned = false;
+  final MobileScannerController controller = MobileScannerController();
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       appBar: AppBar(
         backgroundColor: const Color(0xff4F6F52),
         foregroundColor: Colors.white,
-        title: const Text("Scan QR Code"),
+        title: const Text("Scan QR / Barcode"),
       ),
 
       body: MobileScanner(
+        controller: controller,
 
         onDetect: (barcodeCapture) {
+          if (scanned) return;
 
-          if(scanned) return;
+          final List<Barcode> barcodes = barcodeCapture.barcodes;
 
-          final barcode = barcodeCapture.barcodes.first;
+          for (final barcode in barcodes) {
+            final String? code = barcode.rawValue;
 
-          final String? code = barcode.rawValue;
+            if (code != null) {
+              scanned = true;
 
-          if(code != null){
+              controller.stop(); // หยุดกล้อง
 
-            scanned = true;
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AssetDetailScreen(assetCode: code),
+                ),
+              );
 
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => AssetDetailScreen(assetCode: code),
-              ),
-            );
-
+              break;
+            }
           }
-
         },
-
       ),
     );
   }
