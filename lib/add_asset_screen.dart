@@ -63,7 +63,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
     var request = http.MultipartRequest(
         'POST',
-        Uri.parse("http://10.0.2.2:5000/upload")
+        Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/upload")
     );
 
     request.files.add(
@@ -89,7 +89,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     String? imageName = await uploadImage();
 
     var response = await http.post(
-      Uri.parse("http://10.0.2.2:5000/assets"),
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets"),
       headers: {"Content-Type":"application/json"},
       body: jsonEncode({
 

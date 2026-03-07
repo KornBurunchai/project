@@ -20,7 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future registerUser() async {
 
-    var url = Uri.parse("http://10.0.2.2:5000/register");
+    var url = Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/register");
 
     var response = await http.post(
       url,

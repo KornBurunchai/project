@@ -30,7 +30,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
   Future fetchAsset() async {
     final res = await http.get(
-      Uri.parse("http://10.0.2.2:5000/assets/code/${widget.assetCode}"),
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/code/${widget.assetCode}"),
     );
 
     if (res.statusCode == 200) {
@@ -43,7 +43,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
   Future deleteAsset() async {
     await http.delete(
-      Uri.parse("http://10.0.2.2:5000/assets/${asset["asset_id"]}"),
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/${asset["asset_id"]}"),
     );
 
     if (!mounted) return;
@@ -178,7 +178,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
-                        "http://10.0.2.2:5000/uploads/${asset["image"]}",
+                        "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/uploads/${asset["image"]}",
                         fit: BoxFit.cover,
                       ),
                     )

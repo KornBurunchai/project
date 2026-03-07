@@ -82,7 +82,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
 
     var request = http.MultipartRequest(
         'POST',
-        Uri.parse("http://10.0.2.2:5000/upload")
+        Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/upload")
     );
 
     request.files.add(
@@ -108,7 +108,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
     String? imageName = await uploadImage();
 
     var response = await http.put(
-      Uri.parse("http://10.0.2.2:5000/assets/${widget.asset["asset_id"]}"),
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/${widget.asset["asset_id"]}"),
       headers: {"Content-Type":"application/json"},
       body: jsonEncode({
 
@@ -241,7 +241,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                 ? ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.network(
-                "http://10.0.2.2:5000/uploads/$oldImage",
+                "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/uploads/$oldImage",
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,

@@ -110,7 +110,7 @@ class AssetItem extends StatelessWidget {
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.network(
-                        "http://10.0.2.2:5000/uploads/$image",
+                        "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/uploads/$image",
                         fit: BoxFit.cover,
                       ),
                     )
@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// ================= GET ASSETS =================
   Future<void> fetchAssets() async {
-    final res = await http.get(Uri.parse("http://10.0.2.2:5000/assets"));
+    final res = await http.get(Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets"));
 
     if (res.statusCode == 200) {
       setState(() {
@@ -181,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// ================= DASHBOARD =================
   Future<void> fetchDashboard() async {
-    final res = await http.get(Uri.parse("http://10.0.2.2:5000/dashboard"));
+    final res = await http.get(Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/dashboard"));
 
     if (res.statusCode == 200) {
       final data = json.decode(res.body);

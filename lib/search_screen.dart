@@ -54,7 +54,7 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     final res = await http.get(
-      Uri.parse("http://10.0.2.2:5000/assets?search=$keyword"),
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets?search=$keyword"),
     );
 
     if (res.statusCode == 200) {
@@ -125,7 +125,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.network(
-                        "http://10.0.2.2:5000/uploads/${asset["image"]}",
+                        "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/uploads/${asset["image"]}",
                         fit: BoxFit.cover,
                       ),
                     )
