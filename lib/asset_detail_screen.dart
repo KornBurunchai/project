@@ -30,7 +30,9 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
   Future fetchAsset() async {
     final res = await http.get(
-      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/code/${widget.assetCode}"),
+      Uri.parse(
+        "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/code/${widget.assetCode}",
+      ),
     );
 
     if (res.statusCode == 200) {
@@ -42,17 +44,31 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
   }
 
   Future deleteAsset() async {
-    await http.delete(
-      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/${asset["asset_id"]}"),
+    final res = await http.delete(
+      Uri.parse(
+        "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/${asset["asset_id"]}",
+      ),
     );
 
     if (!mounted) return;
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-      (route) => false,
-    );
+    if (res.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("ลบข้อมูลครุภัณฑ์สำเร็จ"),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+        );
+      });
+    }
   }
 
   Widget buildField(String label, String value) {
@@ -101,7 +117,6 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-
             IconButton(
               icon: const Icon(Icons.home, color: Colors.white),
               onPressed: () {
@@ -160,7 +175,6 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
         child: Column(
           children: [
-
             /// IMAGE
             Container(
               width: double.infinity,
@@ -195,7 +209,6 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
               child: Column(
                 children: [
-
                   const Text(
                     "QR Code",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -226,7 +239,6 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
             Row(
               children: [
-
                 /// EDIT BUTTON
                 Expanded(
                   child: ElevatedButton.icon(
@@ -267,12 +279,10 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                     ),
 
                     onPressed: () async {
-
                       bool? confirm = await showDialog(
                         context: context,
                         barrierDismissible: false,
                         builder: (_) {
-
                           return Dialog(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
@@ -284,7 +294,6 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-
                                   const Text(
                                     "ยืนยันการลบหรือไม่ ?",
                                     style: TextStyle(
@@ -309,15 +318,17 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
                                   Row(
                                     children: [
-
                                       Expanded(
                                         child: ElevatedButton(
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.red,
                                             foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                           ),
 
@@ -334,10 +345,15 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                                       Expanded(
                                         child: OutlinedButton(
                                           style: OutlinedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(vertical: 14),
-                                            side: const BorderSide(color: Colors.grey),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
+                                            side: const BorderSide(
+                                              color: Colors.grey,
+                                            ),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                           ),
 
@@ -347,7 +363,9 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
                                           child: const Text(
                                             "ยกเลิก",
-                                            style: TextStyle(color: Colors.black87),
+                                            style: TextStyle(
+                                              color: Colors.black87,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -363,11 +381,9 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                       if (confirm == true) {
                         deleteAsset();
                       }
-
                     },
                   ),
                 ),
-
               ],
             ),
           ],
