@@ -61,12 +61,10 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(12),
-
         decoration: BoxDecoration(
           color: const Color(0xffEEEEEE),
           borderRadius: BorderRadius.circular(8),
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -74,9 +72,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
               label,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
-
             const SizedBox(height: 4),
-
             Text(value, style: const TextStyle(fontSize: 16)),
           ],
         ),
@@ -102,10 +98,10 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
       bottomNavigationBar: Container(
         height: 70,
         color: const Color(0xff4F6F52),
-
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
+
             IconButton(
               icon: const Icon(Icons.home, color: Colors.white),
               onPressed: () {
@@ -164,11 +160,11 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
         child: Column(
           children: [
+
             /// IMAGE
             Container(
               width: double.infinity,
               height: 180,
-
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -190,7 +186,6 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
             /// QR CODE
             Container(
               width: double.infinity,
-
               padding: const EdgeInsets.all(16),
 
               decoration: BoxDecoration(
@@ -200,6 +195,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
               child: Column(
                 children: [
+
                   const Text(
                     "QR Code",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -230,13 +226,15 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
             Row(
               children: [
+
+                /// EDIT BUTTON
                 Expanded(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.edit),
                     label: const Text("แก้ไข"),
 
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
                     ),
 
@@ -257,6 +255,7 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
 
                 const SizedBox(width: 10),
 
+                /// DELETE BUTTON
                 Expanded(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.delete),
@@ -268,33 +267,107 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
                     ),
 
                     onPressed: () async {
-                      bool confirm = await showDialog(
+
+                      bool? confirm = await showDialog(
                         context: context,
+                        barrierDismissible: false,
+                        builder: (_) {
 
-                        builder: (_) => AlertDialog(
-                          title: const Text("ยืนยัน"),
-                          content: const Text("ต้องการลบข้อมูลนี้ใช่หรือไม่"),
-
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("ยกเลิก"),
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
                             ),
 
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("ลบ"),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+
+                                  const Text(
+                                    "ยืนยันการลบหรือไม่ ?",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  const Divider(),
+
+                                  const SizedBox(height: 10),
+
+                                  const Text(
+                                    "หากกดปุ่มยืนยัน\nไม่สามารถย้อนกลับได้",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+
+                                  const SizedBox(height: 25),
+
+                                  Row(
+                                    children: [
+
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+
+                                          onPressed: () {
+                                            Navigator.pop(context, true);
+                                          },
+
+                                          child: const Text("ยืนยัน"),
+                                        ),
+                                      ),
+
+                                      const SizedBox(width: 12),
+
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                            side: const BorderSide(color: Colors.grey),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+
+                                          onPressed: () {
+                                            Navigator.pop(context, false);
+                                          },
+
+                                          child: const Text(
+                                            "ยกเลิก",
+                                            style: TextStyle(color: Colors.black87),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       );
 
-                      if (confirm) {
+                      if (confirm == true) {
                         deleteAsset();
                       }
+
                     },
                   ),
                 ),
+
               ],
             ),
           ],

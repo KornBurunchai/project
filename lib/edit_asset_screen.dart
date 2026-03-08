@@ -262,7 +262,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
             ElevatedButton(
               onPressed: pickImage,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff4F6F52),
+                backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
               ),
               child: const Text("เลือกรูป"),
@@ -278,7 +278,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                 onPressed: updateAsset,
 
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xff4F6F52),
+                  backgroundColor: Colors.green,
                   padding: const EdgeInsets.all(15),
                 ),
 

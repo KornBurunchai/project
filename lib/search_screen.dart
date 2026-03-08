@@ -15,7 +15,6 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-
   final TextEditingController searchController = TextEditingController();
 
   List assets = [];
@@ -23,25 +22,15 @@ class _SearchScreenState extends State<SearchScreen> {
 
   /// ================= STATUS COLOR =================
   Color getStatusColor(String status) {
-
-    if (status == "ปกติ") {
-      return Colors.green;
-    }
-
-    if (status == "แจ้งซ่อม") {
-      return Colors.orange;
-    }
-
-    if (status == "จำหน่ายออก") {
-      return Colors.red;
-    }
+    if (status == "ปกติ") return Colors.green;
+    if (status == "แจ้งซ่อม") return Colors.orange;
+    if (status == "จำหน่ายออก") return Colors.red;
 
     return Colors.grey;
   }
 
   /// ================= SEARCH =================
   Future searchAsset(String keyword) async {
-
     if (keyword.isEmpty) {
       setState(() {
         assets = [];
@@ -54,71 +43,57 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     final res = await http.get(
-      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets?search=$keyword"),
+      Uri.parse(
+        "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets?search=$keyword",
+      ),
     );
 
     if (res.statusCode == 200) {
-
       final data = json.decode(res.body);
 
       setState(() {
         assets = data;
         loading = false;
       });
-
     } else {
-
       setState(() {
         loading = false;
       });
-
     }
   }
 
   /// ================= ASSET CARD =================
   Widget assetCard(Map asset) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(15),
 
-    return GestureDetector(
-
-      onTap: (){
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                AssetDetailScreen(assetCode: asset["asset_code"]),
+            builder: (_) => AssetDetailScreen(assetCode: asset["asset_code"]),
           ),
         );
       },
 
       child: Container(
-
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsets.all(12),
 
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
-
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0,2),
-            )
-          ],
         ),
 
         child: Row(
           children: [
-
-            /// IMAGE FROM DATABASE
+            /// IMAGE
             Container(
-              width: 50,
-              height: 50,
+              width: 60,
+              height: 60,
 
               decoration: BoxDecoration(
-                color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(10),
+                color: Colors.grey[300],
               ),
 
               child: asset["image"] != null && asset["image"] != ""
@@ -129,7 +104,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         fit: BoxFit.cover,
                       ),
                     )
-                  : const Icon(Icons.laptop,size:28),
+                  : const Icon(Icons.computer),
             ),
 
             const SizedBox(width: 12),
@@ -139,16 +114,15 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Text(
-                    asset["asset_name"] ?? "",
+                    "${asset["asset_name"]} - ${asset["location"]}",
                     style: const TextStyle(
+                      fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
 
                   Text(
                     asset["status"] ?? "",
@@ -157,13 +131,9 @@ class _SearchScreenState extends State<SearchScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                 ],
               ),
             ),
-
-            const Icon(Icons.arrow_forward_ios,size:16)
-
           ],
         ),
       ),
@@ -172,15 +142,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       backgroundColor: const Color(0xffEDEDED),
 
       body: SafeArea(
         child: Column(
           children: [
-
             /// ================= HEADER =================
             Container(
               width: double.infinity,
@@ -190,7 +157,6 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   const Text(
                     "ระบบตรวจเช็คครุภัณฑ์",
                     style: TextStyle(
@@ -204,10 +170,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
                   /// SEARCH BAR
                   TextField(
-
                     controller: searchController,
 
-                    onChanged: (value){
+                    onChanged: (value) {
                       searchAsset(value);
                     },
 
@@ -223,111 +188,94 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                   ),
-
                 ],
               ),
             ),
 
             /// ================= RESULT =================
             Expanded(
-
               child: loading
                   ? const Center(child: CircularProgressIndicator())
-
                   : assets.isEmpty
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.search, size: 80, color: Colors.grey),
 
-                            Icon(Icons.search,size:80,color:Colors.grey),
+                        SizedBox(height: 10),
 
-                            SizedBox(height:10),
-
-                            Text(
-                              "ค้นหาครุภัณฑ์",
-                              style: TextStyle(fontSize:16,color:Colors.grey),
-                            ),
-
-                            SizedBox(height:5),
-
-                            Text(
-                              "กรอกชื่อหรือรหัสเพื่อค้นหา",
-                              style: TextStyle(fontSize:14,color:Colors.grey),
-                            ),
-
-                          ],
-                        )
-
-                      : ListView.builder(
-
-                          padding: const EdgeInsets.all(16),
-
-                          itemCount: assets.length,
-
-                          itemBuilder: (context,index){
-
-                            final asset = assets[index];
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: assetCard(asset),
-                            );
-                          },
-
+                        Text(
+                          "ค้นหาครุภัณฑ์",
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
                         ),
-            ),
 
+                        SizedBox(height: 5),
+
+                        Text(
+                          "กรอกชื่อหรือรหัสเพื่อค้นหา",
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+
+                      itemCount: assets.length,
+
+                      itemBuilder: (context, index) {
+                        final asset = assets[index];
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: assetCard(asset),
+                        );
+                      },
+                    ),
+            ),
           ],
         ),
       ),
 
       /// ================= BOTTOM MENU =================
       bottomNavigationBar: Container(
-
         height: 70,
         color: const Color(0xff4F6F52),
 
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-
-            /// HOME
             GestureDetector(
-              onTap: (){
+              onTap: () {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_)=>const HomeScreen()),
-                  (route)=>false,
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  (route) => false,
                 );
               },
-              child: const Icon(Icons.home,color:Colors.white),
+              child: const Icon(Icons.home, color: Colors.white),
             ),
 
-            /// SEARCH
-            const Icon(Icons.search,color:Colors.white),
+            const Icon(Icons.search, color: Colors.white),
 
-            /// QR
             GestureDetector(
-              onTap: (){
+              onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_)=>const QRScanScreen()),
+                  MaterialPageRoute(builder: (_) => const QRScanScreen()),
                 );
               },
-              child: const Icon(Icons.qr_code_scanner,color:Colors.white),
+              child: const Icon(Icons.qr_code_scanner, color: Colors.white),
             ),
 
-            /// ADD
             GestureDetector(
-              onTap: (){
+              onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_)=>const AddAssetScreen()),
+                  MaterialPageRoute(builder: (_) => const AddAssetScreen()),
                 );
               },
-              child: const Icon(Icons.add,color:Colors.white),
+              child: const Icon(Icons.add, color: Colors.white),
             ),
-
           ],
         ),
       ),
