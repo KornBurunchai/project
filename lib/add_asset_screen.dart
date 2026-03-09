@@ -24,19 +24,12 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   final TextEditingController detailController = TextEditingController();
 
   String status = "ปกติ";
-  String type = "คอมพิวเตอร์";
 
   File? imageFile;
   final picker = ImagePicker();
 
-  List<String> typeList = [
-    "คอมพิวเตอร์",
-    "จอภาพ",
-    "เครื่องพิมพ์",
-    "โต๊ะ",
-    "เก้าอี้",
-    "อื่นๆ",
-  ];
+  List typeList = [];
+  int? typeId;
 
   List<String> statusList = [
     "ปกติ",
@@ -44,7 +37,31 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     "จำหน่ายออก"
   ];
 
-  /// ================= PICK IMAGE =================
+  @override
+  void initState() {
+    super.initState();
+    loadTypes();
+  }
+
+  /// โหลดประเภทครุภัณฑ์
+  Future loadTypes() async {
+
+    var res = await http.get(
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/types")
+    );
+
+    if(res.statusCode == 200){
+
+      var data = jsonDecode(res.body);
+
+      setState(() {
+        typeList = data;
+      });
+
+    }
+  }
+
+  /// เลือกรูป
   Future pickImage() async {
 
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -56,14 +73,14 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     }
   }
 
-  /// ================= UPLOAD IMAGE =================
+  /// upload รูป
   Future<String?> uploadImage() async {
 
-    if(imageFile == null) return null;
+    if(imageFile == null) return "";
 
     var request = http.MultipartRequest(
-        'POST',
-        Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/upload")
+      'POST',
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/upload")
     );
 
     request.files.add(
@@ -80,10 +97,10 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       return data["filename"];
     }
 
-    return null;
+    return "";
   }
 
-  /// ================= ADD ASSET =================
+  /// เพิ่มครุภัณฑ์
   Future addAsset() async {
 
     String? imageName = await uploadImage();
@@ -95,12 +112,12 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
         "asset_code": assetCodeController.text,
         "asset_name": nameController.text,
-        "type_id": 1,
+        "type_id": typeId,
         "brand": brandController.text,
         "location": locationController.text,
         "description": detailController.text,
         "status": status,
-        "image": imageName ?? ""
+        "image": imageName
 
       }),
     );
@@ -108,19 +125,19 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     if(response.statusCode == 200){
 
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("เพิ่มครุภัณฑ์สำเร็จ"))
+        const SnackBar(content: Text("เพิ่มครุภัณฑ์สำเร็จ"))
       );
 
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
-            (route) => false,
+        (route) => false,
       );
 
     }else{
 
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("เพิ่มข้อมูลไม่สำเร็จ"))
+        const SnackBar(content: Text("เพิ่มข้อมูลไม่สำเร็จ"))
       );
 
     }
@@ -152,18 +169,22 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             /// TYPE
             DropdownButtonFormField(
-              value: type,
-              items: typeList.map((item) {
+              value: typeId,
+              items: typeList.map<DropdownMenuItem>((item){
+
                 return DropdownMenuItem(
-                  value: item,
-                  child: Text(item),
+                  value: item["type_id"],
+                  child: Text(item["type_name"]),
                 );
+
               }).toList(),
+
               onChanged: (value){
                 setState(() {
-                  type = value.toString();
+                  typeId = value;
                 });
               },
+
               decoration: const InputDecoration(
                 labelText: "ประเภทครุภัณฑ์",
                 border: OutlineInputBorder(),
@@ -210,23 +231,23 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             imageFile == null
                 ? Container(
-              height: 150,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.green),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(child: Text("ยังไม่มีรูป")),
-            )
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.green),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(child: Text("ยังไม่มีรูป")),
+                  )
                 : ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.file(
-                imageFile!,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      imageFile!,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
 
             const SizedBox(height: 10),
 
@@ -291,7 +312,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
               child: const Icon(Icons.search,color: Colors.white),
             ),
 
-            /// QR SCAN
             GestureDetector(
               onTap: () async {
 
@@ -320,7 +340,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     );
   }
 
-  /// ================= ASSET CODE =================
   Widget buildAssetCodeField(){
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -355,7 +374,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     );
   }
 
-  /// ================= TEXTFIELD =================
   Widget buildTextField(
       String hint,
       TextEditingController controller,
@@ -376,4 +394,5 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       ),
     );
   }
+
 }

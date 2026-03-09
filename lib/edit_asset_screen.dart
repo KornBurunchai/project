@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 
 import 'qr_scan_screen_add.dart';
-import 'search_screen.dart';
 import 'home_screen.dart';
 
 class EditAssetScreen extends StatefulWidget {
@@ -27,28 +26,24 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
   final TextEditingController detailController = TextEditingController();
 
   String status = "ปกติ";
-  String type = "คอมพิวเตอร์";
 
   File? imageFile;
   String? oldImage;
 
   final picker = ImagePicker();
 
-  List<String> typeList = [
-    "คอมพิวเตอร์",
-    "จอภาพ",
-    "เครื่องพิมพ์",
-    "โต๊ะ",
-    "เก้าอี้",
-    "อื่นๆ",
-  ];
+  /// ================= TYPE =================
+  List typeList = [];
+  int? typeId;
 
+  /// ================= STATUS =================
   List<String> statusList = [
     "ปกติ",
     "แจ้งซ่อม",
     "จำหน่ายออก"
   ];
 
+  /// ================= INIT =================
   @override
   void initState() {
     super.initState();
@@ -61,6 +56,27 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
 
     status = widget.asset["status"] ?? "ปกติ";
     oldImage = widget.asset["image"];
+    typeId = widget.asset["type_id"];
+
+    loadTypes();
+  }
+
+  /// ================= LOAD TYPES =================
+  Future loadTypes() async {
+
+    var res = await http.get(
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev/types")
+    );
+
+    if(res.statusCode == 200){
+
+      var data = jsonDecode(res.body);
+
+      setState(() {
+        typeList = data;
+      });
+
+    }
   }
 
   /// ================= PICK IMAGE =================
@@ -114,7 +130,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
 
         "asset_code": assetCodeController.text,
         "asset_name": nameController.text,
-        "type_id": 1,
+        "type_id": typeId,
         "brand": brandController.text,
         "location": locationController.text,
         "description": detailController.text,
@@ -146,6 +162,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
 
   }
 
+  /// ================= UI =================
   @override
   Widget build(BuildContext context) {
 
@@ -171,18 +188,22 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
 
             /// TYPE
             DropdownButtonFormField(
-              value: type,
-              items: typeList.map((item) {
+              value: typeId,
+              items: typeList.map<DropdownMenuItem>((item){
+
                 return DropdownMenuItem(
-                  value: item,
-                  child: Text(item),
+                  value: item["type_id"],
+                  child: Text(item["type_name"]),
                 );
+
               }).toList(),
+
               onChanged: (value){
                 setState(() {
-                  type = value.toString();
+                  typeId = value;
                 });
               },
+
               decoration: const InputDecoration(
                 labelText: "ประเภทครุภัณฑ์",
                 border: OutlineInputBorder(),

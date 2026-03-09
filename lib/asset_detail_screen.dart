@@ -29,15 +29,27 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
   }
 
   Future fetchAsset() async {
-    final res = await http.get(
-      Uri.parse(
-        "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/code/${widget.assetCode}",
-      ),
-    );
+    try {
+      final res = await http.get(
+        Uri.parse(
+          "https://unsalubriously-courdinative-nathanael.ngrok-free.dev/assets/code/${widget.assetCode}",
+        ),
+      );
 
-    if (res.statusCode == 200) {
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body);
+
+        setState(() {
+          asset = data;
+          loading = false;
+        });
+      } else {
+        setState(() {
+          loading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        asset = json.decode(res.body);
         loading = false;
       });
     }
@@ -56,7 +68,6 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("ลบข้อมูลครุภัณฑ์สำเร็จ"),
-          backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),
       );

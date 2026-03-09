@@ -11,7 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  mobile_scanner: ^5.0.0
+  mobile_scanner: ^5.1.1
+  vibration: ^3.1.8  # updated to latest embedding‑2 compatible version
   http: ^0.13.6
   image_picker: ^1.0.4
   qr_flutter: ^4.1.0
