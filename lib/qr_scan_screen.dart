@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:vibration/vibration.dart';
+import 'package:http/http.dart' as http;
 
 import 'asset_detail_screen.dart';
 
@@ -17,9 +19,19 @@ class _QRScanScreenState extends State<QRScanScreen>
   bool scanned = false;
 
   final MobileScannerController controller = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
+    detectionSpeed: DetectionSpeed.noDuplicates,
     facing: CameraFacing.back,
     torchEnabled: false,
+    formats: [
+      BarcodeFormat.qrCode,
+      BarcodeFormat.code128,
+      BarcodeFormat.code39,
+      BarcodeFormat.ean13,
+      BarcodeFormat.ean8,
+      BarcodeFormat.upcA,
+      BarcodeFormat.upcE,
+      BarcodeFormat.itf,
+    ],
   );
 
   late AnimationController laserController;
@@ -34,8 +46,10 @@ class _QRScanScreenState extends State<QRScanScreen>
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    laserAnimation = Tween<double>(begin: -120, end: 120)
-        .animate(laserController);
+    laserAnimation = Tween<double>(
+      begin: -120,
+      end: 120,
+    ).animate(laserController);
   }
 
   @override
@@ -45,15 +59,63 @@ class _QRScanScreenState extends State<QRScanScreen>
     super.dispose();
   }
 
+  Future checkAsset(String code) async {
+
+    var res = await http.get(
+      Uri.parse("https://YOUR_URL/assets/code/$code"),
+    );
+
+    if(res.statusCode == 200){
+
+      var data = jsonDecode(res.body);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AssetDetailScreen(assetCode: data["asset_code"]),
+        ),
+      );
+
+    }else{
+
+      showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            title: const Text("ไม่พบข้อมูล"),
+            content: const Text("ไม่เจอข้อมูลครุภัณฑ์"),
+            actions: [
+              TextButton(
+                onPressed: (){
+                  Navigator.pop(context);
+                  setState(() {
+                    scanned = false;
+                  });
+                  controller.start();
+                },
+                child: const Text("ตกลง"),
+              )
+            ],
+          );
+        },
+      );
+
+    }
+
+  }
+
   void onDetectBarcode(BarcodeCapture barcodeCapture) {
 
     if (scanned) return;
 
     for (final barcode in barcodeCapture.barcodes) {
 
-      final String? code = barcode.rawValue;
+      final String? code = barcode.rawValue ?? barcode.displayValue;
 
-      if (code != null) {
+      print("SCAN RESULT = $code");
+      print("FORMAT = ${barcode.format}");
+
+      if (code != null && code.isNotEmpty) {
 
         setState(() {
           scanned = true;
@@ -63,12 +125,7 @@ class _QRScanScreenState extends State<QRScanScreen>
 
         Vibration.vibrate(duration: 150);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AssetDetailScreen(assetCode: code),
-          ),
-        );
+        checkAsset(code.trim());
 
         break;
       }
@@ -118,7 +175,7 @@ class _QRScanScreenState extends State<QRScanScreen>
             color: Colors.black.withOpacity(0.4),
           ),
 
-          /// SCAN AREA
+          /// SCAN FRAME
           Center(
             child: Container(
               width: 260,
@@ -130,7 +187,7 @@ class _QRScanScreenState extends State<QRScanScreen>
             ),
           ),
 
-          /// LASER LINE
+          /// LASER
           Center(
             child: AnimatedBuilder(
               animation: laserAnimation,
@@ -150,11 +207,11 @@ class _QRScanScreenState extends State<QRScanScreen>
           ),
 
           /// TEXT
-          Positioned(
+          const Positioned(
             bottom: 120,
             left: 0,
             right: 0,
-            child: const Text(
+            child: Text(
               "วาง QR Code หรือ Barcode ในกรอบ",
               textAlign: TextAlign.center,
               style: TextStyle(

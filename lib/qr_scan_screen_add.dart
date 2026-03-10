@@ -11,75 +11,54 @@ class QRScanScreenAdd extends StatefulWidget {
 
 class _QRScanScreenAddState extends State<QRScanScreenAdd>
     with SingleTickerProviderStateMixin {
-
   bool scanned = false;
 
   final MobileScannerController controller = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
+    detectionSpeed: DetectionSpeed.noDuplicates,
     facing: CameraFacing.back,
     torchEnabled: false,
   );
 
-  late AnimationController laserController;
-  late Animation<double> laserAnimation;
+  void onDetectBarcode(BarcodeCapture capture) {
+    if (scanned) return;
 
-  @override
-  void initState() {
-    super.initState();
+    final Barcode barcode = capture.barcodes.first;
 
-    laserController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+    /// ใช้ rawValue เพื่อให้ได้ค่าบาร์โค้ดจริง
+    String? code = barcode.rawValue;
 
-    laserAnimation = Tween<double>(begin: -120, end: 120).animate(laserController);
+    if (code != null) {
+      /// ลบเครื่องหมาย * ที่หัวท้าย
+      code = code.replaceAll("*", "").trim();
+
+      scanned = true;
+
+      controller.stop();
+
+      Vibration.vibrate(duration: 150);
+
+      print("SCAN RESULT = $code");
+
+      Navigator.pop(context, code);
+    }
   }
 
   @override
   void dispose() {
     controller.dispose();
-    laserController.dispose();
     super.dispose();
-  }
-
-  void onDetectBarcode(BarcodeCapture barcodeCapture) {
-
-    if (scanned) return;
-
-    for (final barcode in barcodeCapture.barcodes) {
-
-      final String? code = barcode.rawValue;
-
-      if (code != null) {
-
-        setState(() {
-          scanned = true;
-        });
-
-        controller.stop();
-
-        Vibration.vibrate(duration: 150);
-
-        /// ส่งค่า asset_code กลับหน้า Add
-        Navigator.pop(context, code);
-
-        break;
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       appBar: AppBar(
         backgroundColor: const Color(0xff4F6F52),
         foregroundColor: Colors.white,
         title: const Text("Scan QR / Barcode"),
 
         actions: [
-
+          /// เปิดไฟแฟลช
           IconButton(
             icon: const Icon(Icons.flash_on),
             onPressed: () {
@@ -87,29 +66,23 @@ class _QRScanScreenAddState extends State<QRScanScreenAdd>
             },
           ),
 
+          /// สลับกล้อง
           IconButton(
             icon: const Icon(Icons.flip_camera_android),
             onPressed: () {
               controller.switchCamera();
             },
           ),
-
         ],
       ),
 
       body: Stack(
         children: [
-
           /// CAMERA
-          MobileScanner(
-            controller: controller,
-            onDetect: onDetectBarcode,
-          ),
+          MobileScanner(controller: controller, onDetect: onDetectBarcode),
 
           /// DARK OVERLAY
-          Container(
-            color: Colors.black.withOpacity(0.4),
-          ),
+          Container(color: Colors.black.withOpacity(0.4)),
 
           /// SCAN FRAME
           Center(
@@ -123,25 +96,6 @@ class _QRScanScreenAddState extends State<QRScanScreenAdd>
             ),
           ),
 
-          /// LASER LINE
-          Center(
-            child: AnimatedBuilder(
-              animation: laserAnimation,
-              builder: (context, child) {
-
-                return Transform.translate(
-                  offset: Offset(0, laserAnimation.value),
-                  child: Container(
-                    width: 250,
-                    height: 2,
-                    color: Colors.red,
-                  ),
-                );
-
-              },
-            ),
-          ),
-
           /// TEXT GUIDE
           const Positioned(
             bottom: 120,
@@ -150,16 +104,11 @@ class _QRScanScreenAddState extends State<QRScanScreenAdd>
             child: Text(
               "วาง QR Code หรือ Barcode ในกรอบ",
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
           ),
-
         ],
       ),
-
     );
   }
 }

@@ -43,7 +43,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     loadTypes();
   }
 
-  /// โหลดประเภทครุภัณฑ์
   Future loadTypes() async {
 
     var res = await http.get(
@@ -61,7 +60,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     }
   }
 
-  /// เลือกรูป
   Future pickImage() async {
 
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -73,7 +71,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     }
   }
 
-  /// upload รูป
   Future<String?> uploadImage() async {
 
     if(imageFile == null) return "";
@@ -100,7 +97,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     return "";
   }
 
-  /// เพิ่มครุภัณฑ์
   Future addAsset() async {
 
     String? imageName = await uploadImage();
@@ -144,6 +140,23 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
   }
 
+  Future scanQR() async {
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_)=>const QRScanScreenAdd(),
+      ),
+    );
+
+    if(result != null){
+      setState(() {
+        assetCodeController.text = result.toString().trim();
+      });
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -167,7 +180,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             buildTextField("ชื่อครุภัณฑ์", nameController),
 
-            /// TYPE
             DropdownButtonFormField(
               value: typeId,
               items: typeList.map<DropdownMenuItem>((item){
@@ -199,7 +211,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             const SizedBox(height: 10),
 
-            /// STATUS
             DropdownButtonFormField(
               value: status,
               items: statusList.map((item){
@@ -221,7 +232,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             const SizedBox(height: 15),
 
-            /// IMAGE
             const Align(
               alignment: Alignment.centerLeft,
               child: Text("รูปครุภัณฑ์"),
@@ -262,7 +272,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
             const SizedBox(height: 20),
 
-            /// SAVE
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -284,7 +293,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         ),
       ),
 
-      /// BOTTOM MENU
       bottomNavigationBar: Container(
         height: 70,
         color: const Color(0xff4F6F52),
@@ -313,22 +321,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             ),
 
             GestureDetector(
-              onTap: () async {
-
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_)=>const QRScanScreenAdd(),
-                  ),
-                );
-
-                if(result != null){
-                  setState(() {
-                    assetCodeController.text = result;
-                  });
-                }
-
-              },
+              onTap: scanQR,
               child: const Icon(Icons.qr_code_scanner,color: Colors.white),
             ),
 
@@ -352,22 +345,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           ),
           suffixIcon: IconButton(
             icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () async{
-
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_)=>const QRScanScreenAdd(),
-                ),
-              );
-
-              if(result != null){
-                setState(() {
-                  assetCodeController.text = result;
-                });
-              }
-
-            },
+            onPressed: scanQR,
           ),
         ),
       ),
