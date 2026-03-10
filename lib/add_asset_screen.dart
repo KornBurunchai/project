@@ -43,6 +43,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     loadTypes();
   }
 
+  /// โหลดประเภทครุภัณฑ์
   Future loadTypes() async {
 
     var res = await http.get(
@@ -60,9 +61,13 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     }
   }
 
-  Future pickImage() async {
+  /// เลือกรูป / ถ่ายรูป
+  Future pickImage(ImageSource source) async {
 
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+    );
 
     if (pickedFile != null) {
       setState(() {
@@ -71,6 +76,45 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     }
   }
 
+  /// แสดงตัวเลือก Camera / Gallery
+  void showImagePicker(){
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context){
+
+        return SafeArea(
+          child: Wrap(
+            children: [
+
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text("ถ่ายรูป"),
+                onTap: (){
+                  Navigator.pop(context);
+                  pickImage(ImageSource.camera);
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text("เลือกรูปจากคลัง"),
+                onTap: (){
+                  Navigator.pop(context);
+                  pickImage(ImageSource.gallery);
+                },
+              ),
+
+            ],
+          ),
+        );
+
+      },
+    );
+
+  }
+
+  /// อัปโหลดรูป
   Future<String?> uploadImage() async {
 
     if(imageFile == null) return "";
@@ -97,6 +141,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     return "";
   }
 
+  /// เพิ่มครุภัณฑ์
   Future addAsset() async {
 
     String? imageName = await uploadImage();
@@ -140,6 +185,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
   }
 
+  /// สแกน QR
   Future scanQR() async {
 
     final result = await Navigator.push(
@@ -262,12 +308,12 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             const SizedBox(height: 10),
 
             ElevatedButton(
-              onPressed: pickImage,
+              onPressed: showImagePicker,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
               ),
-              child: const Text("เลือกรูป"),
+              child: const Text("เลือกรูป / ถ่ายรูป"),
             ),
 
             const SizedBox(height: 20),

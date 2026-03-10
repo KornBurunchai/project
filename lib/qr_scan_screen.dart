@@ -62,7 +62,7 @@ class _QRScanScreenState extends State<QRScanScreen>
   Future checkAsset(String code) async {
 
     var res = await http.get(
-      Uri.parse("https://YOUR_URL/assets/code/$code"),
+      Uri.parse("https://unsalubriously-courdinative-nathanael.ngrok-free.dev//assets/code/$code"),
     );
 
     if(res.statusCode == 200){
